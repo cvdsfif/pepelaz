@@ -98,12 +98,16 @@ export class FieldObject<T extends FieldObjectDefinition> extends DataField<DbRe
     }
 
     convert(record: any, level = ""): DbRecord<T> {
+        console.log("-----> Unmarshalling record");
+        console.log(stringifyWithBigints(record));
         return Object.keys(this.definition).reduce((accumulator, key) => {
             const matchingField =
                 record[key] ??
                 record[key.toLowerCase()] ??
                 record[convertUppercaseIntoUnderscored(key)];
+            console.log(`--> Unmarshalling field ${key}`);
             const unmarshalledValue = this.definition[key].unmarshal(matchingField, `::${level}::${key}`);
+            console.log(`Unmarshalled: ${unmarshalledValue}`);
             (accumulator as any)[key] = unmarshalledValue;
             return accumulator;
         }, new Object() as DbRecord<T>);
@@ -115,9 +119,8 @@ export const fieldObject = <T extends FieldObjectDefinition>(definition: T, defa
 const convertUppercaseIntoUnderscored = (s: String) => s.replace(/[A-Z]/g, match => `_${match.toLowerCase()}`);
 
 export const unmarshal = (template: DataField<any> | FieldObjectDefinition, field: any) => {
-    if (template instanceof DataField) {
+    if (template instanceof DataField)
         return (template as DataField<any>).unmarshal(field);
-    }
     return fieldObject(template).unmarshal(field);
 }
 

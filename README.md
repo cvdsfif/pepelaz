@@ -1,0 +1,1 @@
+# Typescript library for data types management and marshaling
