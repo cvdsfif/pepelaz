@@ -1,8 +1,12 @@
 /node_modules
+/node_modules_cp
 
 # Ignore test-related files
 /coverage.data
 /coverage/
+/coverage.data.cp
+/coverage_cp/
 
 # Build files
 /dist
+/dist_cp
