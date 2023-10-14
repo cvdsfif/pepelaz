@@ -1,6 +1,6 @@
 {
   "name": "pepelaz",
-  "version": "3.0.0-beta.4",
+  "version": "3.0.0-beta.5",
   "description": "Typescript library for data marshalling between NodeJS servers and React clients",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
