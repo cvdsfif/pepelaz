@@ -1,6 +1,6 @@
 import {
     DbRecord, FieldObjectDefinition, bigIntField, booleanField, dateField, fieldArray, fieldObject,
-    floatField, functionField, integerField, notNull, stringField, stringifyWithBigints, unmarshal
+    floatField, functionField, integerField, jsonField, notNull, stringField, stringifyWithBigints, unmarshal
 } from "../src"
 
 describe("Testing Pepelaz marshalling", () => {
@@ -229,5 +229,25 @@ describe("Testing Pepelaz marshalling", () => {
 
     test("Should correctly stringify bigints", () => {
         expect(stringifyWithBigints({ biga: 1n })).toBe(`{\"biga\":\"1\"}`);
-    })
+    });
+
+    test("Should correctly convert a JSON field", () => {
+        expect(jsonField().convert(`{"id":42}`)).toEqual({ id: 42 });
+        expect(jsonField().convert({ id: 42 })).toEqual({ id: 42 });
+    });
+
+    test("Object should not unmarshal undefined nullable fields", () => {
+        const objectDefinition = fieldObject({ notNullable: stringField(notNull), intushka: integerField() });
+        expect(unmarshal(objectDefinition, { notNullable: "boo" })).toEqual({ notNullable: "boo" });
+    });
+
+    test("Object should unmarshal null nullable fields", () => {
+        const objectDefinition = fieldObject({ notNullable: stringField(notNull), intushka: integerField() });
+        expect(unmarshal(objectDefinition, { notNullable: "boo", intushka: null })).toEqual({ notNullable: "boo", intushka: null });
+    });
+
+    test("Object should verify not null condition for absent fields", () => {
+        const objectDefinition = fieldObject({ notNullable: stringField(notNull), intushka: integerField() });
+        expect(() => unmarshal(objectDefinition, { intushka: null })).toThrow();
+    });
 })

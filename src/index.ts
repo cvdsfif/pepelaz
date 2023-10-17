@@ -65,6 +65,13 @@ class BooleanField extends DataField<boolean>{ convert = (field: any): boolean =
 export const booleanField = (defaultIfNull: boolean | null | NotNull | (() => boolean) = null) => new BooleanField(defaultIfNull);
 export class VoidField extends DataField<void>{ convert = (field: void) => { } }
 export const voidField = () => new VoidField();
+class JsonField extends DataField<Object>{
+    convert = (field: string | Object): Object =>
+        typeof field === "string" ?
+            JSON.parse(field as string) :
+            field;
+};
+export const jsonField = (defaultIfNull: boolean | null | NotNull | (() => Object) = null) => new JsonField(defaultIfNull);
 
 class FieldArray<T> extends DataField<(T | null)[]>{
     readonly members: DataField<T>;
@@ -98,17 +105,16 @@ export class FieldObject<T extends FieldObjectDefinition> extends DataField<DbRe
     }
 
     convert(record: any, level = ""): DbRecord<T> {
-        console.log("-----> Unmarshalling record");
         console.log(stringifyWithBigints(record));
         return Object.keys(this.definition).reduce((accumulator, key) => {
             const matchingField =
-                record[key] ??
-                record[key.toLowerCase()] ??
-                record[convertUppercaseIntoUnderscored(key)];
-            console.log(`--> Unmarshalling field ${key}`);
-            const unmarshalledValue = this.definition[key].unmarshal(matchingField, `::${level}::${key}`);
-            console.log(`Unmarshalled: ${unmarshalledValue}`);
-            (accumulator as any)[key] = unmarshalledValue;
+                record[key] !== undefined ? record[key] :
+                    record[key.toLowerCase()] !== undefined ? record[key.toLowerCase()] :
+                        record[convertUppercaseIntoUnderscored(key)];
+            if (matchingField !== undefined || this.definition[key].defaultIfNull() !== null) {
+                const unmarshalledValue = this.definition[key].unmarshal(matchingField, `::${level}::${key}`);
+                (accumulator as any)[key] = unmarshalledValue;
+            }
             return accumulator;
         }, new Object() as DbRecord<T>);
     }
@@ -124,8 +130,12 @@ export const unmarshal = (template: DataField<any> | FieldObjectDefinition, fiel
     return fieldObject(template).unmarshal(field);
 }
 
-export interface IApiProps {
-    name: string,
-    description: string,
-    definition: DataInterfaceDefinition
+export type ApiProps<T extends DataInterfaceDefinition> = {
+    name: string;
+    definition: T;
 }
+
+export type ApiList = {
+    [P: string]: ApiProps<any>;
+}
+
