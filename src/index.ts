@@ -105,7 +105,6 @@ export class FieldObject<T extends FieldObjectDefinition> extends DataField<DbRe
     }
 
     convert(record: any, level = ""): DbRecord<T> {
-        console.log(stringifyWithBigints(record));
         return Object.keys(this.definition).reduce((accumulator, key) => {
             const matchingField =
                 record[key] !== undefined ? record[key] :
