@@ -27,28 +27,31 @@ export type DbRecord<T> = T extends FieldObject<infer S> ? DbRecord<S> : {
     [P in keyof T]?: FieldType<T[P]> | null;
 }
 
-export class FunctionField<Arg extends DataField<any>, Ret extends DataField<any>>{
-    readonly argument: Arg;
-    readonly retval: Ret;
+export class FunctionField<Arg, Ret>{
+    readonly argument: DataField<Arg>;
+    readonly retval: DataField<Ret>;
 
-    constructor(argument: Arg, retval: Ret) {
+    constructor(argument: DataField<Arg>, retval: DataField<Ret>) {
         this.argument = argument;
         this.retval = retval;
     }
 }
 export const functionField =
-    <Arg extends DataField<any>, Ret extends DataField<any>>(arg: Arg, ret: Ret) =>
+    <Arg, Ret>(arg: DataField<Arg>, ret: DataField<Ret>) =>
         new FunctionField<Arg, Ret>(arg, ret);
 
 export type DataInterfaceDefinition = {
-    [P in any]: FunctionField<DataField<any>, DataField<any>>;
+    [P: string]: FunctionField<any, any>;
 }
-export type FunctionFieldType<T> = T extends FunctionField<infer Arg, infer Ret> ? (arg: FieldType<Arg>) => FieldType<Ret> : T;
-export type AsyncFunctionFieldType<T> = T extends FunctionField<infer Arg, infer Ret> ? (arg: FieldType<Arg>) => Promise<FieldType<Ret>> : T;
-export type FunctionReturnType<T> = T extends FunctionField<infer Arg, infer Ret> ? FieldType<Ret> : T;
-export type FunctionArgumentType<T> = T extends FunctionField<infer Arg, infer Ret> ? FieldType<Arg> : T;
-export type DataInterface<T> = {
+export type FunctionFieldType<T> = T extends FunctionField<infer Arg, infer Ret> ? (arg: FieldType<DataField<Arg>>) => FieldType<DataField<Ret>> : T;
+export type AsyncFunctionFieldType<T> = T extends FunctionField<infer Arg, infer Ret> ? (arg: FieldType<DataField<Arg>>) => Promise<FieldType<DataField<Ret>>> : T;
+export type FunctionReturnType<T> = T extends FunctionField<infer Arg, infer Ret> ? FieldType<DataField<Ret>> : T;
+export type FunctionArgumentType<T> = T extends FunctionField<infer Arg, infer Ret> ? FieldType<DataField<Arg>> : T;
+export type DataInterface<T extends DataInterfaceDefinition> = {
     [P in keyof T]: FunctionFieldType<T[P]>;
+}
+export type AsyncDataInterface<T> = {
+    [P in keyof T]: AsyncFunctionFieldType<T[P]>;
 }
 
 class IntegerField extends DataField<number>{ convert = (field: any): number => parseInt(field); };
@@ -59,8 +62,11 @@ export class BigIntField extends DataField<bigint>{ convert = (field: any): bigi
 export const bigIntField = (defaultIfNull: bigint | null | NotNull | (() => bigint) = null) => new BigIntField(defaultIfNull);
 class StringField extends DataField<string>{ convert = (field: any): string => `${field}`; };
 export const stringField = (defaultIfNull: string | null | NotNull | (() => string) = null) => new StringField(defaultIfNull);
-export class DateField extends DataField<Date>{ convert = (field: any): Date => new Date(field); };
+
+export const DATE_EXPECTING_NOW = new Date(0);
+export class DateField extends DataField<Date>{ convert = (field: any): Date => field === "now" ? DATE_EXPECTING_NOW : new Date(field); };
 export const dateField = (defaultIfNull: Date | null | NotNull | (() => Date) = null) => new DateField(defaultIfNull);
+
 class BooleanField extends DataField<boolean>{ convert = (field: any): boolean => Boolean(field).valueOf(); };
 export const booleanField = (defaultIfNull: boolean | null | NotNull | (() => boolean) = null) => new BooleanField(defaultIfNull);
 export class VoidField extends DataField<void>{ convert = (field: void) => { } }
@@ -89,7 +95,7 @@ export const fieldArray = <T>(member: DataField<T>, defaultIfNull: ((T | null)[]
     new FieldArray(member, defaultIfNull);
 
 export const stringifyWithBigints = (value: any) => {
-    (BigInt.prototype as any).toJSON = function () { return this.toString(); }
+    (BigInt.prototype as any).toJSON = function () { return this?.toString(); }
     return JSON.stringify(value);
 }
 
@@ -129,12 +135,13 @@ export const unmarshal = (template: DataField<any> | FieldObjectDefinition, fiel
     return fieldObject(template).unmarshal(field);
 }
 
-export type ApiProps<T extends DataInterfaceDefinition> = {
+
+export type ApiProps = {
     name: string;
-    definition: T;
+    definition: DataInterfaceDefinition;
 }
 
 export type ApiList = {
-    [P: string]: ApiProps<any>;
+    [P: string]: ApiProps;
 }
 

@@ -250,4 +250,9 @@ describe("Testing Pepelaz marshalling", () => {
         const objectDefinition = fieldObject({ notNullable: stringField(notNull), intushka: integerField() });
         expect(() => unmarshal(objectDefinition, { intushka: null })).toThrow();
     });
+
+    test("The special 'now' value should translate to special zero date", () => {
+        const objectDefinition = fieldObject({ date: dateField() });
+        expect(unmarshal(objectDefinition, { date: "now" })).toEqual({ date: new Date(0) });
+    })
 })
