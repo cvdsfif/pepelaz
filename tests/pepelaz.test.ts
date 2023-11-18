@@ -1,6 +1,6 @@
 import {
     DbRecord, FieldObjectDefinition, bigIntField, booleanField, dateField, fieldArray, fieldObject,
-    floatField, functionField, integerField, jsonField, notNull, stringField, stringifyWithBigints, unmarshal
+    floatField, integerField, jsonField, notNull, stringField, stringifyWithBigints, unmarshal
 } from "../src"
 
 describe("Testing Pepelaz marshalling", () => {
@@ -217,14 +217,6 @@ describe("Testing Pepelaz marshalling", () => {
     test("Object definition should replace null by default value", () => {
         const objectDefinition = fieldObject({ intushka: integerField() }, { intushka: 42 });
         expect(unmarshal(objectDefinition, null)).toEqual({ intushka: 42 });
-    });
-
-    test("Function definition should keep type information", () => {
-        const stringDef = stringField();
-        const intDef = integerField();
-        const functionDef = functionField(stringDef, intDef);
-        expect(functionDef.argument).toBe(stringDef);
-        expect(functionDef.retval).toBe(intDef);
     });
 
     test("Should correctly stringify bigints", () => {
