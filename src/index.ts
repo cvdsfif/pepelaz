@@ -117,6 +117,8 @@ export type ApiInterface<T extends ApiDefinition> = {
 export type ApiAsyncInterface<T extends ApiDefinition> = {
     [P in keyof T]: T[P]["arg"] extends DataField<infer S> ? T[P]["ret"] extends DataField<infer R> ? (arg: S) => Promise<R> : never : never;
 }
+export type ApiFunctionArgument<T extends ApiDefinition, K extends keyof T> = T[K]["arg"] extends DataField<infer S> ? S : never;
+export type ApiFunctionReturnType<T extends ApiDefinition, K extends keyof T> = T[K]["ret"] extends DataField<infer S> ? S : never;
 
 export type ApiList = {
     [P: string]: ApiDefinition;
