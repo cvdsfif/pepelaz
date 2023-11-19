@@ -109,7 +109,7 @@ export const unmarshal = (template: DataField<any> | FieldObjectDefinition, fiel
 }
 
 export type ApiDefinition = {
-    [P: string]: { arg: DataField<any>, ret: DataField<any>, name?: string, description?: string }
+    [P: string]: { arg: DataField<any>, ret: DataField<any> }
 }
 export type ApiInterface<T extends ApiDefinition> = {
     [P in keyof T]: T[P]["arg"] extends DataField<infer S> ? T[P]["ret"] extends DataField<infer R> ? (arg: S) => R : never : never;
