@@ -120,7 +120,3 @@ export type ApiAsyncInterface<T extends ApiDefinition> = {
 export type ApiFunctionArgument<T extends ApiDefinition, K extends keyof T> = T[K]["arg"] extends DataField<infer S> ? S : never;
 export type ApiFunctionReturnType<T extends ApiDefinition, K extends keyof T> = T[K]["ret"] extends DataField<infer S> ? S : never;
 
-export type ApiList = {
-    [P: string]: ApiDefinition;
-}
-
