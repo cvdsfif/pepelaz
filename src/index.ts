@@ -22,11 +22,6 @@ export abstract class DataField<T> {
         return this.convert(field, level);
     }
 };
-export type FieldType<T> = T extends DataField<infer R> ? R : T;
-export type DbRecord<T> = T extends FieldObject<infer S> ? DbRecord<S> : {
-    [P in keyof T]?: FieldType<T[P]> | null;
-}
-
 class IntegerField extends DataField<number>{ convert = (field: any): number => parseInt(field); };
 export const integerField = (defaultIfNull: number | null | NotNull | (() => number) = null) => new IntegerField(defaultIfNull);
 class FloatField extends DataField<number>{ convert = (field: any): number => parseFloat(field); };
@@ -72,6 +67,19 @@ export const stringifyWithBigints = (value: any) => {
     return JSON.stringify(value);
 }
 
+export type FieldType<T> = T extends DataField<infer R> ? R : T;
+export type DbRecord<T> = T extends FieldObject<infer S> ? DbRecord<S> : {
+    [P in keyof T]?: FieldType<T[P]> | null;
+}
+export type InputWithStringsAllowed<T> =
+    T extends FieldArray<infer Z> ? InputWithStringsAllowed<Z>[] :
+    T extends DateField ? Date | string | null :
+    T extends FieldObject<infer S> ?
+    InputWithStringsAllowed<S> :
+    T extends DataField<infer R> ? R : {
+        [P in keyof T]?: InputWithStringsAllowed<T[P]> | null;
+    }
+
 export type FieldObjectDefinition = {
     [P in any]: DataField<any>;
 }
@@ -116,6 +124,10 @@ export type ApiInterface<T extends ApiDefinition> = {
 }
 export type ApiAsyncInterface<T extends ApiDefinition> = {
     [P in keyof T]: T[P]["arg"] extends DataField<infer S> ? T[P]["ret"] extends DataField<infer R> ? (arg: S) => Promise<R> : never : never;
+}
+export type ApiAsyncInterfaceWithStringInputsAllowed<T extends ApiDefinition> = {
+    [P in keyof T]: T[P]["arg"] extends DataField<infer S> ? T[P]["ret"] extends DataField<infer R> ?
+    (arg: InputWithStringsAllowed<S>) => Promise<R> : never : never;
 }
 export type ApiFunctionArgument<T extends ApiDefinition, K extends keyof T> = T[K]["arg"] extends DataField<infer S> ? S : never;
 export type ApiFunctionReturnType<T extends ApiDefinition, K extends keyof T> = T[K]["ret"] extends DataField<infer S> ? S : never;

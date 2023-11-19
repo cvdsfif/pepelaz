@@ -246,5 +246,15 @@ describe("Testing Pepelaz marshalling", () => {
     test("The special 'now' value should translate to special zero date", () => {
         const objectDefinition = fieldObject({ date: dateField() });
         expect(unmarshal(objectDefinition, { date: "now" })).toEqual({ date: new Date(0) });
-    })
+    });
+
+    test("Should correctly unmarshal fields with missing date", () => {
+        const objectDefinition = fieldObject({ date: dateField() });
+        expect(unmarshal(objectDefinition, {})).toEqual({});
+    });
+
+    test("Should correctly unmarshal fields with null date", () => {
+        const objectDefinition = fieldObject({ date: dateField() });
+        expect(unmarshal(objectDefinition, { date: null })).toEqual({ date: null });
+    });
 })
